@@ -1,0 +1,208 @@
+<!-- service: https://qiita.com/ukonpower/items/5623e423e3362fef513a -->
+<!-- account: yoshito.mikami@arcjp.com fazq=5HUxzgS -->
+<!-- project: demo -->
+<!-- appkey: unxFctEF6qawNEOhyhTDEDbNyvYafuyHAXCLXeBxLVTFErYdjyu4QeHb7KrWuYZtaaKOfg -->
+
+<!-- note: https://qiita.com/ukonpower/items/5623e423e3362fef513a -->
+<!-- note: https://github.com/8thwall/web/blob/master/examples/threejs/placeground/index.js#L134 -->
+
+<!-- https://drive.google.com/drive/folders/1NaAfo9AXCoW0LtRbRVFrkEKEX7UiFVwm?usp=sharing -->
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Neko</title>
+    <!-- THREE.js must be supplied -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/93/three.min.js"></script>
+    <!-- 8thwall -->
+    <script src="//cdn.8thwall.com/web/xrextras/xrextras.js"></script>
+    <script defer src="https://apps.8thwall.com/xrweb?appKey=unxFctEF6qawNEOhyhTDEDbNyvYafuyHAXCLXeBxLVTFErYdjyu4QeHb7KrWuYZtaaKOfg"></script>
+    <!-- Required to load glTF (.gltf or .glb) models -->
+    <script src="//cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+    <table>
+      <tr>
+        <td>
+          <canvas id="camerafeed" width="480px" height="480px"></canvas>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <button id="pause" style="width:100%">PAUSE</button>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <button id="reset" style="width:100%">RESET</button>
+        </td>
+      </tr>
+    </table>
+    <div id="debug" style="width:100%;">
+    </div>
+</body>
+<script>
+<!------------------------------------------------------------------>
+function debug(s){
+  var item=document.getElementById("debug");
+  item.innerHTML=s;
+}
+function getProp(obj){
+  var s="";
+  for (var item in obj) {
+    s = s + "," + item;
+  }
+  return s;
+}
+<!------------------------------------------------------------------>
+const onxrloaded = () => {
+
+  const startTime = Date.now();
+  const coneLoopMillis = 3000;
+
+  const loader = new THREE.GLTFLoader();
+  const scale = new THREE.Vector3(0.2, 0.2, 0.2);
+
+  let mdlNeko;
+
+  const putNeko = (pointX, pointZ) => {
+    loader.load(
+      "cat_sensei.glb",                                                              // resource URL.
+      (gltf) => { setPos(gltf, pointX, pointZ, Math.random() * 360); },     // loaded handler.
+      (xhr) => {/*console.log(`${(xhr.loaded / xhr.total * 100 )}% loaded`)*/},   // progress handler.
+      (error) => {/*console.log('An error happened')*/}                           // error handler.
+    );
+  }
+  const setPos = (model, pointX, pointZ, yDegrees) => {
+    //
+    model.scene.rotation.set(0.0, 0.0, 0.0);
+    model.scene.position.set(pointX, 0.0, pointZ);
+    model.scene.scale.set(scale.x, scale.y, scale.z);
+    XR.Threejs.xrScene().scene.add(model.scene);
+
+    mdlNeko = model;
+  }
+  // camera
+  const initXrScene = ({scene, camera}) => {
+    // Add a grid of purple spheres to the scene. Objects in the scene at height/ y=0 will appear to
+    // stick to physical surfaces.
+    if(1){
+      for (let i = -5; i <=5 ; i += .5) {
+        for (let j = -5; j <= 5; j += .5) {
+          if (Math.round(i) != i && Math.round(j) != j) { continue; }
+          const sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(.03, 8, 8), new THREE.MeshBasicMaterial({color: 0xAD50FF}));
+          sphere.position.set(i, 0, j);
+          scene.add(sphere);
+        }
+      }
+    }
+
+    // Add soft white light to the scene.
+    scene.add(new THREE.AmbientLight( 0x404040, 2.9 ));
+    scene.add(new THREE.DirectionalLight(0xFFFFFF, 0.25));
+
+    putNeko(0,0);
+    camera.position.set(0, 0, 3);
+  }
+
+  //alert("addCameraPipelineModules");
+  XR.addCameraPipelineModules([  // Add camera pipeline modules.
+    // Existing pipeline modules.
+    XR.GlTextureRenderer.pipelineModule(),       // Draws the camera feed.
+    XR.Threejs.pipelineModule(),                 // Creates a ThreeJS AR Scene.
+    XR.XrController.pipelineModule(),            // Enables SLAM tracking.
+    XRExtras.AlmostThere.pipelineModule(),       // Detects unsupported browsers and gives hints.
+    XRExtras.RuntimeError.pipelineModule(),      // Shows an error image on runtime error.
+  ]);
+
+  // Add custom logic to the camera loop. This is done with camera pipeline modules that provide
+  // logic for key lifecycle moments for processing each camera frame. In this case, we'll be
+  // adding onStart logic for scene initialization, and onUpdate logic for scene updates.
+  //alert("addCameraPipelineModule");
+  XR.addCameraPipelineModule({
+    // Camera pipeline modules need a name. It can be whatever you want but must be unique within
+    // your app.
+    name: 'myawesomeapp',
+
+    // onStart is called once when the camera feed begins. In this case, we need to wait for the
+    // XR.Threejs scene to be ready before we can access it to add content. It was created in
+    // XR.Threejs.pipelineModule()'s onStart method.
+    onStart: ({canvasWidth, canvasHeight}) => {
+      // Get the 3js sceen from xr3js.
+      const {scene, camera} = XR.Threejs.xrScene();
+
+      // Add some objects to the scene and set the starting camera position.
+      initXrScene({scene, camera});
+    },
+
+    // onUpdate is called once per camera loop prior to render. Any 3js geometry scene
+    // would typically happen here.
+    onUpdate: () => {
+      // Update the position of the animating cone at a constant angular velocity.
+      const {scene, camera} = XR.Threejs.xrScene();
+      //camera.position.set(0, 3, 0);
+      //debug(
+      //   "cam-pos-x:" + camera.position.x + "<br />" +
+      //   "cam-pos-y:" + camera.position.y + "<br />" +
+      //   "cam-pos-z:" + camera.position.z + "<br />" +
+      //   "cam-rot-x:" + camera.quaternion._x + "<br />" +
+      //   "cam-rot-y:" + camera.quaternion._y + "<br />" +
+      //   "cam-rot-z:" + camera.quaternion._z + "<br />" +
+      //   "cam-rot-w:" + camera.quaternion._w + "<br />" +
+      //   ""
+      //);
+    },
+  });
+  ///////////////////////////////////////////////////////////////////////
+  // Call xrController.pause() / xrController.resume() when the button is pressed.
+  const pauseButton = document.getElementById('pause');
+  pauseButton && pauseButton.addEventListener(
+    'click',
+    () => {
+      if (!XR.isPaused()) {
+        XR.pause()
+        pauseButton.innerHTML = "RESUME"
+        pauseButton.className = 'paused'
+      } else {
+        XR.resume()
+        pauseButton.innerHTML = "PAUSE",
+        pauseButton.className = ''
+      }
+    },
+    true);
+  ///////////////////////////////////////////////////////////////////////
+  //                             reset
+  const resetButton = document.getElementById('reset');
+  resetButton && resetButton.addEventListener(
+    'click',
+    () => {
+      const {scene, camera} = XR.Threejs.xrScene();
+      mdlNeko.scene.rotation.setFromQuaternion(camera.quaternion);
+
+      var v = new THREE.Vector3(0,0,0.8);
+      //var rot = new THREE.Matrix4(); 
+      v.applyQuaternion(camera.quaternion);
+      mdlNeko.scene.position.set(camera.position.x -v.x, camera.position.y -v.y, camera.position.z -v.z);
+      debug(
+         "cam-pos-x:" + camera.position.x + "<br />" +
+         "cam-pos-y:" + camera.position.y + "<br />" +
+         "cam-pos-z:" + camera.position.z + "<br />" +
+         "x:" + v.x + "<br />" +
+         "y:" + v.y + "<br />" +
+         "z:" + v.z + "<br />" +
+         ""
+      );
+    },
+    true);
+  ///////////////////////////////////////////////////////////////////////
+  //start
+  const canvas = document.getElementById('camerafeed');
+  XR.run({canvas});
+}
+
+window.onload = () => {window.XR ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)}
+<!------------------------------------------------------------------>
+</script>
+</html>
