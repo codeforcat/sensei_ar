@@ -177,12 +177,12 @@ const onxrloaded = () => {
     'click',
     () => {
       if (!XR.isPaused()) {
-        XR.pause()
-        pauseButton.innerHTML = "RESUME"
+        XR.pause();
+        pauseButton.innerHTML = "RESUME";
         //pauseButton.className = 'paused'
       } else {
-        XR.resume()
-        pauseButton.innerHTML = "PAUSE",
+        XR.resume();
+        pauseButton.innerHTML = "PAUSE";
         //pauseButton.className = ''
       }
     },
