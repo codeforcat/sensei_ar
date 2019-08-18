@@ -201,16 +201,16 @@ const onxrloaded = () => {
       //var rot = new THREE.Matrix4(); 
       v.applyQuaternion(camera.quaternion);
       mdlNeko.scene.position.set(camera.position.x -v.x, camera.position.y -v.y, camera.position.z -v.z);
-      debug(
-         "cam-pos-x:" + camera.position.x + "<br />" +
-         "cam-pos-y:" + camera.position.y + "<br />" +
-         "cam-pos-z:" + camera.position.z + "<br />" +
-         "x:" + v.x + "<br />" +
-         "y:" + v.y + "<br />" +
-         "z:" + v.z + "<br />" +
-getProp(mdlNeko.scene.rotation)+
-         ""
-      );
+      //debug(
+      //   "cam-pos-x:" + camera.position.x + "<br />" +
+      //   "cam-pos-y:" + camera.position.y + "<br />" +
+      //   "cam-pos-z:" + camera.position.z + "<br />" +
+      //   "x:" + v.x + "<br />" +
+      //   "y:" + v.y + "<br />" +
+      //   "z:" + v.z + "<br />" +
+//getProp(mdlNeko.scene.rotation)+
+      //   ""
+      //);
     },
     true);
   ///////////////////////////////////////////////////////////////////////
