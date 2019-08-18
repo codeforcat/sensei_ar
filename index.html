@@ -21,6 +21,20 @@
     <!-- Required to load glTF (.gltf or .glb) models -->
     <script src="//cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
 </head>
+<style>
+.test1{
+    position:  absolute;        /* 要素の配置方法を指定 */
+    padding:  0px;             /* 余白指定 */
+    left:  50px;                /* 左からの位置指定 */
+    top: 500px;                  /* 上からの位置指定 */
+}
+.test2{
+    position:  absolute;        /* 要素の配置方法を指定 */
+    padding:  0px;             /* 余白指定 */
+    left:  50px;                /* 左からの位置指定 */
+    top: 530px;                  /* 上からの位置指定 */
+}
+</style>
 <body>
     <table>
       <tr>
@@ -30,12 +44,12 @@
       </tr>
       <tr>
         <td>
-          <button id="pause" style="width:100%">PAUSE</button>
+          <button id="pause" class="test2" style="width:100%">PAUSE</button>
         </td>
       </tr>
       <tr>
         <td>
-          <button id="reset" style="width:100%">RESET</button>
+          <button id="reset" class="test1" style="width:100%">RESET</button>
         </td>
       </tr>
     </table>
